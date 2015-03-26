@@ -1,12 +1,13 @@
 var express = require('express')
 var bodyParser = require('body-parser');
-
-var app = express()
+var fs = require('fs');
+var app = express();
 
 var messages = [];
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
+app.use(express.static('public'));
 
 app.all('*', function(req, res, next){
 	res.header('Access-Control-Allow-Origin', '*');
@@ -15,11 +16,11 @@ app.all('*', function(req, res, next){
 	res.header('Access-Control-Max-Age', 10);
 
 	if(req.method === 'OPTIONS') {
-	res.status(200).send(null);
+		res.status(200).send(null);
 	} else {
-	return next();
+		return next();
 	}
-})
+});
 
 app.get('/classes/messages', function (req, res) {
   var rmsg = messages;
@@ -31,9 +32,7 @@ app.get('/classes/messages', function (req, res) {
 })
 
 app.post('/classes/messages', function (req, res) {
-  var n = req.body;
-  n.objectId = messages.length;
-  console.log(n);
+  var n = req.body; n.objectId = messages.length;
   messages.push(n)
   res.sendStatus(201)
 })
@@ -50,6 +49,7 @@ app.get('/classes/:room', function (req, res) {
 	});
 	res.status(201).send(JSON.stringify({'results': r}));
 });
+
 
 var server = app.listen(3000, 'localhost', function () {
 
