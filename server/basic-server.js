@@ -1,41 +1,61 @@
-/* Import node's http module: */
-var http = require("http");
+var express = require('express')
+var bodyParser = require('body-parser');
 
+var app = express()
 
-// Every server needs to listen on a port with a unique number. The
-// standard port for HTTP servers is port 80, but that port is
-// normally already claimed by another server and/or not accessible
-// so we'll use a standard testing port like 3000, other common development
-// ports are 8080 and 1337.
-var port = 3000;
+var messages = [];
 
-// For now, since you're running this server on your local machine,
-// we'll have it listen on the IP address 127.0.0.1, which is a
-// special address that always refers to localhost.
-var ip = "127.0.0.1";
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
 
-var handleRequest = require('./request-handler.js')
+app.all('*', function(req, res, next){
+	res.header('Access-Control-Allow-Origin', '*');
+	res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+	res.header('Access-Control-Allow-Headers', 'content-type, accept');
+	res.header('Access-Control-Max-Age', 10);
 
-// We use node's http module to create a server.
-//
-// The function we pass to http.createServer will be used to handle all
-// incoming requests.
-//
-// After creating the server, we will tell it to listen on the given port and IP. */
-var server = http.createServer(handleRequest.requestHandler);
-console.log("Listening on http://" + ip + ":" + port);
-server.listen(port, ip);
+	if(req.method === 'OPTIONS') {
+	res.status(200).send(null);
+	} else {
+	return next();
+	}
+})
 
-// To start this server, run:
-//
-//   node basic-server.js
-//
-// on the command line.
-//
-// To connect to the server, load http://127.0.0.1:3000 in your web
-// browser.
-//
-// server.listen() will continue running as long as there is the
-// possibility of serving more requests. To stop your server, hit
-// Ctrl-C on the command line.
+app.get('/classes/messages', function (req, res) {
+  var rmsg = messages;
+  if(req.params.order === '-createdAt'){
+  	rmsg.reverse();
+  }
+  res.header('Content-Type', 'application/json');
+  res.status(200).send(JSON.stringify({'results': rmsg}))
+})
 
+app.post('/classes/messages', function (req, res) {
+  var n = req.body;
+  n.objectId = messages.length;
+  console.log(n);
+  messages.push(n)
+  res.sendStatus(201)
+})
+
+app.post('/classes/:room', function (req, res) {
+  res.status(201).send(JSON.stringify({}));
+})
+
+app.get('/classes/:room', function (req, res) {
+	var r = messages.map(function(o){
+		if(o.roomname === req.params.room){
+		return o;
+		}
+	});
+	res.status(201).send(JSON.stringify({'results': r}));
+});
+
+var server = app.listen(3000, 'localhost', function () {
+
+  var host = server.address().address
+  var port = server.address().port
+
+  console.log('Example app listening at http://%s:%s', host, port)
+
+})

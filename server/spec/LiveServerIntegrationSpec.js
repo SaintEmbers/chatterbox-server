@@ -3,7 +3,7 @@ var expect = require('../../node_modules/chai/chai').expect;
 var basicServer = require('../basic-server').server;
 
 describe('server', function() {
-  it('should respond to GET requests for /log with a 200 status code', function(done) {
+  it('should respond to GET requests for /classes/messages with a 200 status code', function(done) {
     request('http://127.0.0.1:3000/classes/messages', function(error, response, body) {
       expect(response.statusCode).to.equal(200);
       done();
@@ -34,7 +34,7 @@ describe('server', function() {
     });
   });
 
-  it('should accept POST requests to /send', function(done) {
+  it('should accept POST requests to /classes/messages', function(done) {
     var requestParams = {method: 'POST',
       uri: 'http://127.0.0.1:3000/classes/messages',
       json: {
