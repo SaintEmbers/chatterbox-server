@@ -3,8 +3,6 @@ var bodyParser = require('body-parser');
 var fs = require('fs');
 var app = express();
 
-var messages = [];
-
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.use(express.static('public'));
@@ -23,31 +21,44 @@ app.all('*', function(req, res, next){
 });
 
 app.get('/classes/messages', function (req, res) {
-  var rmsg = messages;
-  if(req.params.order === '-createdAt'){
-  	rmsg.reverse();
-  }
-  res.header('Content-Type', 'application/json');
-  res.status(200).send(JSON.stringify({'results': rmsg}))
+  fs.readFile('store.json', {'encoding':'utf8'}, function(err, data){
+  	var rmsg = [];
+  	if(!err){
+  		rmsg = JSON.parse(data);
+		  if(req.params.order === '-createdAt'){
+		  	rmsg.reverse();
+		  }
+		}
+	  res.header('Content-Type', 'application/json');
+	  res.status(200).send(JSON.stringify({'results': rmsg}))
+  });
 })
 
 app.post('/classes/messages', function (req, res) {
-  var n = req.body; n.objectId = messages.length;
-  messages.push(n)
-  res.sendStatus(201)
-})
+	fs.readFile('store.json', {'encoding':'utf8'}, function(err, data){
+		//data === already existing JSON object of messages
+		//n === the new message we should add
+		if(err) { data = [] } else { data = JSON.parse(data) };
+   
+    var n = req.body; n.objectId = data.length;
+    data.push(n);
+		fs.writeFile("store.json", JSON.stringify(data), function(){
+      res.sendStatus(201);
+		});
+	});
+});
 
 app.post('/classes/:room', function (req, res) {
   res.status(201).send(JSON.stringify({}));
 })
 
 app.get('/classes/:room', function (req, res) {
-	var r = messages.map(function(o){
+	/*var r = messages.map(function(o){
 		if(o.roomname === req.params.room){
 		return o;
 		}
 	});
-	res.status(201).send(JSON.stringify({'results': r}));
+	res.status(201).send(JSON.stringify({'results': r}));*/
 });
 
 
